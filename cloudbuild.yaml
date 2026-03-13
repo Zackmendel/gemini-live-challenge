@@ -1,5 +1,5 @@
 steps:
-  # 1. Build the container image
+  # 1. Build the container image using the NEW Artifact Registry path
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     args:
@@ -10,11 +10,11 @@ steps:
           -t europe-west1-docker.pkg.dev/$PROJECT_ID/superhero-repo/superhero-app .
     secretEnv: ['API_KEY']
 
-  # 2. Push to Artifact Registry
+  # 2. Push to the NEW Artifact Registry (NOT gcr.io)
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'europe-west1-docker.pkg.dev/$PROJECT_ID/superhero-repo/superhero-app']
 
-  # 3. Deploy to Cloud Run
+  # 3. Deploy to Cloud Run using the NEW image path
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
