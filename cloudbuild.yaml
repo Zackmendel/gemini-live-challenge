@@ -31,3 +31,7 @@ availableSecrets:
   secretManager:
   - versionName: projects/$PROJECT_ID/secrets/GEMINI_API_KEY/versions/latest
     env: 'API_KEY'
+
+# Add this at the bottom of your file
+options:
+  logging: CLOUD_LOGGING_ONLY
