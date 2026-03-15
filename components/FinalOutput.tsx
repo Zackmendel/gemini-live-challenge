@@ -47,7 +47,7 @@ function createWavUrl(base64Data: string, sampleRate = 24000): string {
   return URL.createObjectURL(blob);
 }
 
-export default function FinalOutput({ text }: { text: string }) {
+export default function FinalOutput({ text, isRevealed }: { text: string, isRevealed?: boolean }) {
   const [heroImage, setHeroImage] = useState<string | null>(null);
   const [isGeneratingHero, setIsGeneratingHero] = useState(false);
   
@@ -77,6 +77,72 @@ export default function FinalOutput({ text }: { text: string }) {
 
   const motionMatch = text.match(/\*\*8\.\s*The Motion Genesis\*\*:\s*([\s\S]*?)(?=\[VIDEO_UPLOAD_PLACEHOLDER\]|$)/i);
   const motionPrompt = motionMatch ? motionMatch[1].replace(/```text|```/g, '').trim() : '';
+
+  useEffect(() => {
+    if (isRevealed) {
+      const container = document.getElementById('chat-scroll-container');
+      const finalOutputElement = document.getElementById('final-output-container');
+      
+      if (container && finalOutputElement) {
+        // Scroll to top of final output immediately
+        container.scrollTo({
+          top: finalOutputElement.offsetTop - 40,
+          behavior: 'smooth'
+        });
+        
+        let animationFrameId: number;
+        let isCancelled = false;
+        
+        const cancelScroll = () => { isCancelled = true; };
+        
+        container.addEventListener('wheel', cancelScroll, { passive: true });
+        container.addEventListener('touchstart', cancelScroll, { passive: true });
+        container.addEventListener('mousedown', cancelScroll, { passive: true });
+
+        let startTime: number | null = null;
+        const duration = 25000; // 25 seconds for a slow cinematic pan
+
+        const step = (timestamp: number) => {
+          if (isCancelled) return;
+          if (!startTime) startTime = timestamp;
+          const progress = timestamp - startTime;
+          const percentage = Math.min(progress / duration, 1);
+          
+          // Easing function (easeInOutQuad)
+          const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+          const ease = easeInOutQuad(percentage);
+
+          const targetScrollTop = container.scrollHeight - container.clientHeight;
+          const startScrollTop = finalOutputElement.offsetTop - 40;
+          const distance = targetScrollTop - startScrollTop;
+
+          if (distance > 0) {
+            container.scrollTop = startScrollTop + (distance * ease);
+          }
+
+          if (progress < duration) {
+            animationFrameId = window.requestAnimationFrame(step);
+          }
+        };
+
+        // Start the cinematic pan after 4 seconds
+        const timeoutId = setTimeout(() => {
+          if (!isCancelled) {
+            animationFrameId = window.requestAnimationFrame(step);
+          }
+        }, 4000);
+
+        return () => {
+          isCancelled = true;
+          clearTimeout(timeoutId);
+          if (animationFrameId) window.cancelAnimationFrame(animationFrameId);
+          container.removeEventListener('wheel', cancelScroll);
+          container.removeEventListener('touchstart', cancelScroll);
+          container.removeEventListener('mousedown', cancelScroll);
+        };
+      }
+    }
+  }, [isRevealed]);
 
   useEffect(() => {
     const generateHeroImage = async () => {
@@ -120,7 +186,7 @@ export default function FinalOutput({ text }: { text: string }) {
       try {
         const response = await ai.models.generateContent({
           model: 'gemini-2.5-flash-preview-tts',
-          contents: [{ parts: [{ text: story }] }],
+          contents: [{ parts: [{ text: `${heroName}. ${story}` }] }],
           config: {
             responseModalities: ['AUDIO' as any],
             speechConfig: {
@@ -192,12 +258,12 @@ export default function FinalOutput({ text }: { text: string }) {
         {/* Scrolling Text */}
         {(!audioSrc || audioDuration) && (
           <motion.div
-            initial={{ y: '100vh' }}
-            animate={{ y: '-100%' }}
+            initial={{ y: '50vh' }}
+            animate={{ y: 'calc(-100% + 50vh)' }}
             transition={{ duration: audioDuration || 90, ease: 'linear' }}
             className="absolute top-0 inset-x-0 flex flex-col items-center justify-start pointer-events-none z-10"
           >
-            <div className="max-w-5xl px-8 text-center pb-[20vh]">
+            <div className="max-w-5xl px-8 text-center">
               <h2 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-zinc-500 uppercase tracking-[0.2em] mb-16 drop-shadow-2xl">
                 {heroName}
               </h2>
@@ -220,7 +286,7 @@ export default function FinalOutput({ text }: { text: string }) {
   }
 
   return (
-    <div className="space-y-16 bg-black/40 backdrop-blur-3xl p-6 md:p-16 rounded-[2.5rem] border border-white/10 relative overflow-hidden mt-12 shadow-2xl">
+    <div id="final-output-container" className="space-y-16 bg-black/40 backdrop-blur-3xl p-6 md:p-16 rounded-[2.5rem] border border-white/10 relative overflow-hidden mt-12 shadow-2xl">
       {/* 1. The Hero Name */}
       <div className="text-center relative z-10">
         <motion.h1 
