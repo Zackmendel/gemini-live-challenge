@@ -54,6 +54,7 @@ export default function Chat() {
   const [isLoading, setIsLoading] = useState(false);
   const [matrix, setMatrix] = useState<Record<string, string>>({});
   const [showUnlockSequence, setShowUnlockSequence] = useState(false);
+  const [unlockComplete, setUnlockComplete] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<any>(null);
 
@@ -93,6 +94,10 @@ export default function Chat() {
   }, []);
 
   useEffect(() => {
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg && lastMsg.text.includes('ORIGIN DATA ACQUIRED')) {
+      return;
+    }
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
@@ -123,6 +128,7 @@ export default function Chat() {
 
       if (data.reply.includes('ORIGIN DATA ACQUIRED')) {
         setShowUnlockSequence(true);
+        setUnlockComplete(false);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -160,7 +166,7 @@ export default function Chat() {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col relative z-10">
-        <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 scroll-smooth">
+        <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-10 scroll-smooth" id="chat-scroll-container">
           <AnimatePresence>
             {messages.filter(m => m.text !== 'Initiate Origin Induction.').map((msg) => (
               <motion.div
@@ -179,7 +185,7 @@ export default function Chat() {
                   {msg.role === 'user' ? (
                     <p className="text-[15px] leading-relaxed">{msg.text}</p>
                   ) : msg.text.includes('ORIGIN DATA ACQUIRED') ? (
-                    <FinalOutput text={msg.text} />
+                    <FinalOutput text={msg.text} isRevealed={unlockComplete} />
                   ) : (
                     <div className="prose prose-invert prose-indigo max-w-none prose-p:leading-relaxed prose-p:text-[15px] prose-headings:font-display">
                       <ReactMarkdown>{msg.text}</ReactMarkdown>
@@ -257,7 +263,10 @@ export default function Chat() {
 
       {/* Unlock Sequence Overlay */}
       <AnimatePresence>
-        {showUnlockSequence && <UnlockSequence onComplete={() => setShowUnlockSequence(false)} />}
+        {showUnlockSequence && <UnlockSequence onComplete={() => {
+          setShowUnlockSequence(false);
+          setUnlockComplete(true);
+        }} />}
       </AnimatePresence>
     </div>
   );
