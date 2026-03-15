@@ -252,7 +252,7 @@ export default function FinalOutput({ text, isRevealed }: { text: string, isReve
       setIsPreparingSimulation(true);
       try {
         const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash-preview-tts',
+          model: 'gemini-3.1-flash-image-preview',
           contents: [{ parts: [{ text: `${heroName}. ${story}` }] }],
           config: {
             responseModalities: ['AUDIO' as any],
