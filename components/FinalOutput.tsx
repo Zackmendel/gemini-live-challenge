@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { GoogleGenAI } from '@google/genai';
-import { Loader2, Upload, PlayCircle, Copy, Check, X } from 'lucide-react';
+import { Loader2, Upload, PlayCircle, Copy, Check, X, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
@@ -51,7 +51,8 @@ export default function FinalOutput({ text, isRevealed }: { text: string, isReve
   const [heroImage, setHeroImage] = useState<string | null>(null);
   const [isGeneratingHero, setIsGeneratingHero] = useState(false);
   
-  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
   const [isPreparingSimulation, setIsPreparingSimulation] = useState(false);
   const [audioSrc, setAudioSrc] = useState<string | null>(null);
@@ -145,6 +146,63 @@ export default function FinalOutput({ text, isRevealed }: { text: string, isReve
   }, [isRevealed]);
 
   useEffect(() => {
+    const generateVideo = async () => {
+      if (heroImage && motionPrompt && !generatedVideoUrl && !isGeneratingVideo) {
+        setIsGeneratingVideo(true);
+        try {
+          if (typeof window !== 'undefined' && (window as any).aistudio) {
+            const hasKey = await (window as any).aistudio.hasSelectedApiKey();
+            if (!hasKey) {
+              await (window as any).aistudio.openSelectKey();
+            }
+          }
+          
+          const currentAi = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
+          const base64Data = heroImage.split(',')[1];
+          const mimeType = heroImage.split(';')[0].split(':')[1];
+
+          let operation = await currentAi.models.generateVideos({
+            model: 'veo-3.1-fast-generate-preview',
+            prompt: motionPrompt,
+            image: {
+              imageBytes: base64Data,
+              mimeType: mimeType,
+            },
+            config: {
+              numberOfVideos: 1,
+              resolution: '720p',
+              aspectRatio: '16:9'
+            }
+          });
+
+          while (!operation.done) {
+            await new Promise(resolve => setTimeout(resolve, 10000));
+            operation = await currentAi.operations.getVideosOperation({operation: operation});
+          }
+
+          const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+          if (downloadLink) {
+            const response = await fetch(downloadLink, {
+              method: 'GET',
+              headers: {
+                'x-goog-api-key': process.env.NEXT_PUBLIC_GEMINI_API_KEY || '',
+              },
+            });
+            const blob = await response.blob();
+            setGeneratedVideoUrl(URL.createObjectURL(blob));
+          }
+        } catch (error) {
+          console.error('Failed to generate video:', error);
+        } finally {
+          setIsGeneratingVideo(false);
+        }
+      }
+    };
+
+    generateVideo();
+  }, [heroImage, motionPrompt, generatedVideoUrl, isGeneratingVideo]);
+
+  useEffect(() => {
     const generateHeroImage = async () => {
       if (heroPrompt && !heroImage && !isGeneratingHero) {
         setIsGeneratingHero(true);
@@ -178,6 +236,15 @@ export default function FinalOutput({ text, isRevealed }: { text: string, isReve
     navigator.clipboard.writeText(textToCopy);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleDownload = (url: string, filename: string) => {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   const handleInitialize = async () => {
@@ -222,7 +289,7 @@ export default function FinalOutput({ text, isRevealed }: { text: string, isReve
     }
   }, [isSimulating, audioSrc]);
 
-  if (isSimulating && videoFile) {
+  if (isSimulating && generatedVideoUrl) {
     return (
       <motion.div 
         initial={{ opacity: 0 }}
@@ -232,7 +299,7 @@ export default function FinalOutput({ text, isRevealed }: { text: string, isReve
       >
         {/* Background Video */}
         <video 
-          src={URL.createObjectURL(videoFile)} 
+          src={generatedVideoUrl} 
           autoPlay 
           loop 
           muted 
@@ -309,7 +376,16 @@ export default function FinalOutput({ text, isRevealed }: { text: string, isReve
               <span className="text-xs font-mono uppercase tracking-[0.2em]">Forging Portrait...</span>
             </div>
           ) : heroImage ? (
-            <img src={heroImage} alt={heroName} className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105" />
+            <>
+              <img src={heroImage} alt={heroName} className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105" />
+              <button
+                onClick={(e) => { e.stopPropagation(); handleDownload(heroImage, `${heroName.replace(/\s+/g, '_')}_Portrait.png`); }}
+                className="absolute top-4 right-4 z-20 p-3 bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/20 rounded-xl text-white/70 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-xl"
+                title="Download Image"
+              >
+                <Download className="w-5 h-5" />
+              </button>
+            </>
           ) : (
             <span className="text-zinc-600 font-mono text-sm uppercase tracking-widest">Image generation failed</span>
           )}
@@ -358,6 +434,13 @@ export default function FinalOutput({ text, isRevealed }: { text: string, isReve
                   &quot;{hook}&quot;
                 </p>
               </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleDownload(heroImage, `${heroName.replace(/\s+/g, '_')}_Background.png`); }}
+                className="absolute top-6 right-6 z-20 p-3 bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/20 rounded-xl text-white/70 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-xl"
+                title="Download Background Image"
+              >
+                <Download className="w-5 h-5" />
+              </button>
             </>
           ) : (
             <div className="flex items-center justify-center w-full h-full text-zinc-600 font-mono text-sm uppercase tracking-widest">
@@ -401,84 +484,96 @@ export default function FinalOutput({ text, isRevealed }: { text: string, isReve
           Cinematic Frame Simulation
         </h3>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+        <div className="flex flex-col gap-10">
+          {/* Video Player */}
+          <div className="w-full aspect-video rounded-3xl overflow-hidden bg-white/5 border border-white/10 relative shadow-2xl flex items-center justify-center group">
+            {isGeneratingVideo ? (
+              <div className="flex flex-col items-center gap-4 text-zinc-500">
+                <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+                <span className="text-xs font-mono uppercase tracking-[0.2em]">Synthesizing Motion... (This may take a few minutes)</span>
+              </div>
+            ) : generatedVideoUrl ? (
+              <>
+                <video src={generatedVideoUrl} autoPlay loop muted playsInline className="object-cover w-full h-full" />
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDownload(generatedVideoUrl, `${heroName.replace(/\s+/g, '_')}_Motion.mp4`); }}
+                  className="absolute top-4 right-4 z-20 p-3 bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/20 rounded-xl text-white/70 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-xl"
+                  title="Download Video"
+                >
+                  <Download className="w-5 h-5" />
+                </button>
+              </>
+            ) : (
+              <span className="text-zinc-600 font-mono text-sm uppercase tracking-widest">Awaiting Hero Image...</span>
+            )}
+          </div>
+
           {/* Video Prompt */}
-          <div className="flex flex-col">
-            <div className="flex items-center justify-between mb-6">
-              <span className="text-zinc-400 text-[10px] font-mono font-bold uppercase tracking-[0.2em]">Video Generation Prompt</span>
+          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-3xl p-8 flex flex-col shadow-xl">
+            <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/10">
+              <h3 className="text-indigo-400 font-mono font-bold tracking-[0.2em] uppercase text-xs flex items-center gap-3">
+                <span className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
+                Video Generation Prompt
+              </h3>
               <button 
                 onClick={() => copyToClipboard(motionPrompt, 'motion')}
-                className="flex items-center gap-2 text-[10px] font-mono font-bold tracking-widest text-indigo-400 hover:text-indigo-300 transition-colors"
+                className="p-2.5 hover:bg-white/10 rounded-xl text-zinc-400 hover:text-white transition-all duration-300"
               >
-                {copiedId === 'motion' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copiedId === 'motion' ? 'COPIED' : 'COPY'}
+                {copiedId === 'motion' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex-1 overflow-y-auto custom-scrollbar">
+            <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
               <p className="text-zinc-300 font-mono text-[13px] leading-relaxed whitespace-pre-wrap opacity-80">
                 {motionPrompt}
               </p>
             </div>
           </div>
 
-          {/* Upload & Init */}
-          <div className="flex flex-col justify-center">
-            <label className="flex flex-col items-center justify-center w-full h-56 border border-indigo-500/30 border-dashed rounded-3xl cursor-pointer bg-indigo-500/5 hover:bg-indigo-500/10 transition-all duration-500 group">
-              <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-6">
-                <div className="p-4 bg-indigo-500/10 rounded-full mb-6 group-hover:scale-110 transition-transform duration-500">
-                  <Upload className="w-8 h-8 text-indigo-400" />
-                </div>
-                <p className="mb-3 text-sm text-zinc-300 font-medium">
-                  <span className="text-indigo-400">Upload Generated Video</span> to initialize
-                </p>
-                <p className="text-[11px] font-mono tracking-widest uppercase text-zinc-500">Standard Horizontal (16:9) MP4 or WebM</p>
-              </div>
-              <input 
-                type="file" 
-                className="hidden" 
-                accept="video/*"
-                onChange={(e) => {
-                  if (e.target.files?.[0]) {
-                    setVideoFile(e.target.files[0]);
-                  }
-                }}
-              />
-            </label>
-
-            <AnimatePresence>
-              {videoFile && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mt-8 flex flex-col gap-5"
-                >
+          {/* Simulation Button */}
+          <AnimatePresence>
+            {generatedVideoUrl && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex flex-col gap-5"
+              >
+                {audioSrc && !isSimulating && (
                   <div className="p-5 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
-                    <span className="text-zinc-300 text-sm truncate max-w-[70%] font-medium">{videoFile.name}</span>
-                    <span className="text-emerald-400 text-[10px] font-mono font-bold tracking-[0.2em] uppercase">Ready</span>
+                    <span className="text-zinc-300 text-sm truncate max-w-[70%] font-medium">Generated_Voiceover.wav</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleDownload(audioSrc, `${heroName.replace(/\s+/g, '_')}_Voiceover.wav`)}
+                        className="p-2 hover:bg-white/10 rounded-xl text-zinc-400 hover:text-white transition-all"
+                        title="Download Audio"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                      <span className="text-emerald-400 text-[10px] font-mono font-bold tracking-[0.2em] uppercase">Ready</span>
+                    </div>
                   </div>
-                  
-                  <button 
-                    onClick={handleInitialize}
-                    disabled={isPreparingSimulation}
-                    className="w-full flex items-center justify-center gap-3 py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-mono font-bold text-xs tracking-[0.2em] uppercase transition-all duration-300 shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_40px_rgba(99,102,241,0.6)] disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {isPreparingSimulation ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Synthesizing Audio...
-                      </>
-                    ) : (
-                      <>
-                        <PlayCircle className="w-5 h-5" />
-                        Initialize Simulation
-                      </>
-                    )}
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                )}
+                
+                <button 
+                  onClick={handleInitialize}
+                  disabled={isPreparingSimulation}
+                  className="w-full flex items-center justify-center gap-3 py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-mono font-bold text-xs tracking-[0.2em] uppercase transition-all duration-300 shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_40px_rgba(99,102,241,0.6)] disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {isPreparingSimulation ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Synthesizing Audio...
+                    </>
+                  ) : (
+                    <>
+                      <PlayCircle className="w-5 h-5" />
+                      Initialize Simulation
+                    </>
+                  )}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
