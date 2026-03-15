@@ -12,7 +12,7 @@ steps:
 
   # 2. Push to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'europe-west1-docker.pkg.dev/$PROJECT_ID/superhero-repo/superhero-app']
+    args: ['push', 'europe-west1-docker.pkg.dev/$PROJECT_ID/superhero-repo/superhero-app', '.']
 
   # 3. Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
