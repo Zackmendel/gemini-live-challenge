@@ -1,9 +1,19 @@
+'use client';
+
+import { useState } from 'react';
 import Chat from '@/components/Chat';
+import IntroHook from '@/components/IntroHook';
 
 export default function Home() {
+  const [showIntro, setShowIntro] = useState(true);
+
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-indigo-500/30">
-      <Chat />
+    <main className="min-h-screen">
+      {showIntro ? (
+        <IntroHook onComplete={() => setShowIntro(false)} />
+      ) : (
+        <Chat />
+      )}
     </main>
   );
 }

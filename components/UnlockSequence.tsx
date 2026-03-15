@@ -17,7 +17,7 @@ export default function UnlockSequence({ onComplete }: { onComplete: () => void 
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-zinc-950"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[#050505]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 1 } }}
@@ -40,7 +40,7 @@ export default function UnlockSequence({ onComplete }: { onComplete: () => void 
           transition={{ duration: 1.5 }}
           className="text-center"
         >
-          <h2 className="text-2xl md:text-4xl tracking-[0.5em] text-indigo-500 uppercase font-mono animate-pulse">
+          <h2 className="text-3xl md:text-5xl tracking-[0.5em] text-indigo-500 uppercase font-display font-light animate-pulse">
             Forging Destiny
           </h2>
         </motion.div>
@@ -54,7 +54,7 @@ export default function UnlockSequence({ onComplete }: { onComplete: () => void 
           transition={{ type: 'spring', damping: 15, stiffness: 150 }}
           className="text-center"
         >
-          <h1 className="text-6xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-600 uppercase tracking-tighter drop-shadow-[0_0_60px_rgba(99,102,241,0.6)]">
+          <h1 className="text-7xl md:text-[10rem] leading-none font-display font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-600 uppercase tracking-tighter drop-shadow-[0_0_60px_rgba(99,102,241,0.6)]">
             HERO<br/>UNLOCKED
           </h1>
         </motion.div>
@@ -66,19 +66,19 @@ export default function UnlockSequence({ onComplete }: { onComplete: () => void 
           initial={{ y: '100vh', opacity: 1 }}
           animate={{ y: '-100vh', opacity: 1 }}
           transition={{ duration: 6, ease: 'linear' }}
-          className="text-center space-y-16 max-w-2xl px-6 absolute"
+          className="text-center space-y-20 max-w-2xl px-6 absolute"
         >
-          <h2 className="text-4xl md:text-6xl font-black text-indigo-400 mb-4 tracking-widest uppercase drop-shadow-lg">
+          <h2 className="text-5xl md:text-7xl font-display font-black text-indigo-400 mb-8 tracking-[0.2em] uppercase drop-shadow-lg">
             Origin Data Acquired
           </h2>
-          <div className="space-y-12">
+          <div className="space-y-16">
             <div>
-              <h3 className="text-sm text-zinc-500 uppercase tracking-widest mb-2">Directed By</h3>
-              <p className="text-3xl font-serif text-white">The Cosmic Chronicler</p>
+              <h3 className="text-xs font-mono text-zinc-500 uppercase tracking-[0.3em] mb-4">Directed By</h3>
+              <p className="text-4xl font-display font-light text-white">Aura Genesis</p>
             </div>
             <div>
-              <h3 className="text-sm text-zinc-500 uppercase tracking-widest mb-2">Visual Effects</h3>
-              <p className="text-3xl font-serif text-white">Gemini Vision</p>
+              <h3 className="text-xs font-mono text-zinc-500 uppercase tracking-[0.3em] mb-4">Visual Effects</h3>
+              <p className="text-4xl font-display font-light text-white">Gemini Vision</p>
             </div>
           </div>
         </motion.div>

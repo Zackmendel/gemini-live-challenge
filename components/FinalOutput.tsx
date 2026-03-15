@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { GoogleGenAI, Modality } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import { Loader2, Upload, PlayCircle, Copy, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -122,7 +122,7 @@ export default function FinalOutput({ text }: { text: string }) {
           model: 'gemini-2.5-flash-preview-tts',
           contents: [{ parts: [{ text: story }] }],
           config: {
-            responseModalities: [Modality.AUDIO],
+            responseModalities: ['AUDIO' as any],
             speechConfig: {
               voiceConfig: {
                 prebuiltVoiceConfig: { voiceName: 'Charon' } // Deep, cinematic voice
@@ -220,49 +220,49 @@ export default function FinalOutput({ text }: { text: string }) {
   }
 
   return (
-    <div className="space-y-16 bg-zinc-950 p-6 md:p-12 rounded-3xl border border-zinc-800/50 relative overflow-hidden mt-8">
+    <div className="space-y-16 bg-black/40 backdrop-blur-3xl p-6 md:p-16 rounded-[2.5rem] border border-white/10 relative overflow-hidden mt-12 shadow-2xl">
       {/* 1. The Hero Name */}
       <div className="text-center relative z-10">
         <motion.h1 
           initial={{ scale: 0.8, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           transition={{ type: 'spring', bounce: 0.5, duration: 1 }}
-          className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-indigo-200 to-indigo-600 uppercase tracking-[0.15em] drop-shadow-2xl"
+          className="text-6xl md:text-8xl font-display font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-zinc-500 uppercase tracking-[0.15em] drop-shadow-2xl"
         >
           {heroName}
         </motion.h1>
-        <div className="h-1 w-32 bg-gradient-to-r from-transparent via-indigo-500 to-transparent mx-auto mt-6 rounded-full opacity-50" />
+        <div className="h-0.5 w-48 bg-gradient-to-r from-transparent via-indigo-500 to-transparent mx-auto mt-8 rounded-full opacity-50" />
       </div>
 
       {/* 2. Hero Image & Prompt */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 relative z-10">
-        <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 relative shadow-2xl flex items-center justify-center">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 relative z-10">
+        <div className="aspect-[3/4] rounded-3xl overflow-hidden bg-white/5 border border-white/10 relative shadow-2xl flex items-center justify-center group">
           {isGeneratingHero ? (
-            <div className="flex flex-col items-center gap-3 text-zinc-500">
-              <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-              <span className="text-sm uppercase tracking-widest">Forging Portrait...</span>
+            <div className="flex flex-col items-center gap-4 text-zinc-500">
+              <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+              <span className="text-xs font-mono uppercase tracking-[0.2em]">Forging Portrait...</span>
             </div>
           ) : heroImage ? (
-            <img src={heroImage} alt={heroName} className="object-cover w-full h-full" />
+            <img src={heroImage} alt={heroName} className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105" />
           ) : (
-            <span className="text-zinc-600">Image generation failed</span>
+            <span className="text-zinc-600 font-mono text-sm uppercase tracking-widest">Image generation failed</span>
           )}
         </div>
-        <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 flex flex-col shadow-lg">
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800">
-            <h3 className="text-indigo-400 font-bold tracking-widest uppercase text-sm flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-500" />
+        <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-3xl p-8 flex flex-col shadow-xl">
+          <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/10">
+            <h3 className="text-indigo-400 font-mono font-bold tracking-[0.2em] uppercase text-xs flex items-center gap-3">
+              <span className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
               Hero Generation Prompt
             </h3>
             <button 
               onClick={() => copyToClipboard(heroPrompt, 'hero')}
-              className="p-2 hover:bg-zinc-800 rounded-md text-zinc-400 hover:text-white transition-colors"
+              className="p-2.5 hover:bg-white/10 rounded-xl text-zinc-400 hover:text-white transition-all duration-300"
             >
               {copiedId === 'hero' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto pr-2">
-            <p className="text-zinc-300 font-mono text-sm leading-relaxed whitespace-pre-wrap">
+          <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+            <p className="text-zinc-300 font-mono text-[13px] leading-relaxed whitespace-pre-wrap opacity-80">
               {heroPrompt}
             </p>
           </div>
@@ -270,50 +270,50 @@ export default function FinalOutput({ text }: { text: string }) {
       </div>
 
       {/* 3. The Hook */}
-      <div className="text-center px-4 relative z-10">
-        <h3 className="text-indigo-500 font-bold tracking-widest uppercase text-sm mb-6">The Hook</h3>
-        <p className="text-3xl md:text-5xl font-serif italic text-white leading-tight drop-shadow-lg">
+      <div className="text-center px-4 relative z-10 py-12">
+        <h3 className="text-indigo-500 font-mono font-bold tracking-[0.2em] uppercase text-xs mb-8">The Hook</h3>
+        <p className="text-3xl md:text-5xl font-display italic text-white leading-tight drop-shadow-lg max-w-5xl mx-auto font-light">
           &quot;{hook}&quot;
         </p>
       </div>
 
       {/* 4. Hook Image (Composition) & Prompt */}
-      <div className="flex flex-col gap-8 relative z-10">
-        <div className="w-full aspect-video rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 relative shadow-2xl">
+      <div className="flex flex-col gap-10 relative z-10">
+        <div className="w-full aspect-video rounded-3xl overflow-hidden bg-white/5 border border-white/10 relative shadow-2xl group">
           {heroImage ? (
             <>
-              <img src={heroImage} alt="Background" className="absolute inset-0 w-full h-full object-cover opacity-40 blur-sm scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/80" />
-              <div className="absolute inset-0 flex flex-col justify-between p-8 md:p-16 text-center z-10">
-                <h2 className="text-4xl md:text-6xl font-black text-white uppercase tracking-[0.2em] drop-shadow-2xl mt-4">
+              <img src={heroImage} alt="Background" className="absolute inset-0 w-full h-full object-cover opacity-30 blur-xl scale-110 transition-transform duration-1000 group-hover:scale-105" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent" />
+              <div className="absolute inset-0 flex flex-col justify-end p-10 md:p-20 text-center z-10">
+                <h2 className="text-5xl md:text-7xl font-display font-black text-white uppercase tracking-[0.2em] drop-shadow-2xl mb-6">
                   {heroName}
                 </h2>
-                <p className="text-2xl md:text-4xl font-serif italic text-zinc-200 drop-shadow-xl mb-4">
+                <p className="text-xl md:text-3xl font-display italic text-zinc-300 drop-shadow-xl font-light max-w-4xl mx-auto">
                   &quot;{hook}&quot;
                 </p>
               </div>
             </>
           ) : (
-            <div className="flex items-center justify-center w-full h-full text-zinc-600">
+            <div className="flex items-center justify-center w-full h-full text-zinc-600 font-mono text-sm uppercase tracking-widest">
               Awaiting Hero Image...
             </div>
           )}
         </div>
-        <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 flex flex-col shadow-lg">
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800">
-            <h3 className="text-indigo-400 font-bold tracking-widest uppercase text-sm flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-500" />
+        <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-3xl p-8 flex flex-col shadow-xl">
+          <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/10">
+            <h3 className="text-indigo-400 font-mono font-bold tracking-[0.2em] uppercase text-xs flex items-center gap-3">
+              <span className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
               Hook Image Prompt
             </h3>
             <button 
               onClick={() => copyToClipboard(compPrompt, 'comp')}
-              className="p-2 hover:bg-zinc-800 rounded-md text-zinc-400 hover:text-white transition-colors"
+              className="p-2.5 hover:bg-white/10 rounded-xl text-zinc-400 hover:text-white transition-all duration-300"
             >
               {copiedId === 'comp' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto pr-2">
-            <p className="text-zinc-300 font-mono text-sm leading-relaxed whitespace-pre-wrap">
+          <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+            <p className="text-zinc-300 font-mono text-[13px] leading-relaxed whitespace-pre-wrap opacity-80">
               {compPrompt}
             </p>
           </div>
@@ -321,35 +321,35 @@ export default function FinalOutput({ text }: { text: string }) {
       </div>
 
       {/* 5. Origin Story */}
-      <div className="bg-zinc-900/50 border border-zinc-800/50 p-8 md:p-12 rounded-3xl relative z-10 shadow-xl">
-        <h3 className="text-indigo-500 font-bold tracking-widest uppercase text-sm mb-8 text-center">Origin Story</h3>
-        <div className="prose prose-invert prose-lg md:prose-xl max-w-4xl mx-auto text-zinc-300 leading-relaxed font-serif">
+      <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-10 md:p-16 rounded-[2.5rem] relative z-10 shadow-2xl">
+        <h3 className="text-indigo-500 font-mono font-bold tracking-[0.2em] uppercase text-xs mb-12 text-center">Origin Story</h3>
+        <div className="prose prose-invert prose-lg md:prose-xl max-w-4xl mx-auto text-zinc-300 leading-relaxed font-sans prose-headings:font-display prose-p:text-[17px] prose-p:leading-[1.8]">
           <ReactMarkdown>{story}</ReactMarkdown>
         </div>
       </div>
 
       {/* 6. Cinematic Frame */}
-      <div className="bg-zinc-950 border border-indigo-500/30 p-8 md:p-12 rounded-3xl relative z-10 shadow-[0_0_30px_rgba(99,102,241,0.1)]">
-        <h3 className="text-indigo-400 font-bold tracking-widest uppercase text-sm mb-8 text-center flex items-center justify-center gap-3">
+      <div className="bg-[#050505] border border-indigo-500/20 p-10 md:p-16 rounded-[2.5rem] relative z-10 shadow-[0_0_50px_rgba(99,102,241,0.05)]">
+        <h3 className="text-indigo-400 font-mono font-bold tracking-[0.2em] uppercase text-xs mb-12 text-center flex items-center justify-center gap-3">
           <PlayCircle className="w-5 h-5" />
           Cinematic Frame Simulation
         </h3>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           {/* Video Prompt */}
           <div className="flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-zinc-400 text-xs font-bold uppercase tracking-wider">Video Generation Prompt</span>
+            <div className="flex items-center justify-between mb-6">
+              <span className="text-zinc-400 text-[10px] font-mono font-bold uppercase tracking-[0.2em]">Video Generation Prompt</span>
               <button 
                 onClick={() => copyToClipboard(motionPrompt, 'motion')}
-                className="flex items-center gap-2 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+                className="flex items-center gap-2 text-[10px] font-mono font-bold tracking-widest text-indigo-400 hover:text-indigo-300 transition-colors"
               >
-                {copiedId === 'motion' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                {copiedId === 'motion' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 {copiedId === 'motion' ? 'COPIED' : 'COPY'}
               </button>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex-1 overflow-y-auto">
-              <p className="text-zinc-300 font-mono text-sm leading-relaxed whitespace-pre-wrap">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex-1 overflow-y-auto custom-scrollbar">
+              <p className="text-zinc-300 font-mono text-[13px] leading-relaxed whitespace-pre-wrap opacity-80">
                 {motionPrompt}
               </p>
             </div>
@@ -357,13 +357,15 @@ export default function FinalOutput({ text }: { text: string }) {
 
           {/* Upload & Init */}
           <div className="flex flex-col justify-center">
-            <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-indigo-500/20 border-dashed rounded-2xl cursor-pointer bg-indigo-500/5 hover:bg-indigo-500/10 transition-colors group">
-              <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
-                <Upload className="w-10 h-10 mb-4 text-indigo-400 group-hover:scale-110 transition-transform duration-300" />
-                <p className="mb-2 text-sm text-zinc-300">
-                  <span className="font-bold text-indigo-400">Upload Generated Video</span> to initialize
+            <label className="flex flex-col items-center justify-center w-full h-56 border border-indigo-500/30 border-dashed rounded-3xl cursor-pointer bg-indigo-500/5 hover:bg-indigo-500/10 transition-all duration-500 group">
+              <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-6">
+                <div className="p-4 bg-indigo-500/10 rounded-full mb-6 group-hover:scale-110 transition-transform duration-500">
+                  <Upload className="w-8 h-8 text-indigo-400" />
+                </div>
+                <p className="mb-3 text-sm text-zinc-300 font-medium">
+                  <span className="text-indigo-400">Upload Generated Video</span> to initialize
                 </p>
-                <p className="text-xs text-zinc-500">Standard Horizontal (16:9) MP4 or WebM</p>
+                <p className="text-[11px] font-mono tracking-widest uppercase text-zinc-500">Standard Horizontal (16:9) MP4 or WebM</p>
               </div>
               <input 
                 type="file" 
@@ -383,17 +385,17 @@ export default function FinalOutput({ text }: { text: string }) {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mt-6 flex flex-col gap-4"
+                  className="mt-8 flex flex-col gap-5"
                 >
-                  <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl flex items-center justify-between">
+                  <div className="p-5 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
                     <span className="text-zinc-300 text-sm truncate max-w-[70%] font-medium">{videoFile.name}</span>
-                    <span className="text-emerald-400 text-xs font-bold tracking-wider uppercase">Ready</span>
+                    <span className="text-emerald-400 text-[10px] font-mono font-bold tracking-[0.2em] uppercase">Ready</span>
                   </div>
                   
                   <button 
                     onClick={handleInitialize}
                     disabled={isPreparingSimulation}
-                    className="w-full flex items-center justify-center gap-3 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)] disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center gap-3 py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-mono font-bold text-xs tracking-[0.2em] uppercase transition-all duration-300 shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[0_0_40px_rgba(99,102,241,0.6)] disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {isPreparingSimulation ? (
                       <>
