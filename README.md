@@ -1,20 +1,176 @@
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+
+<img width="1200" height="475" alt="Aura Genesis Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+
+# Aura Genesis: Multimodal Cinematic Orchestrator
+**Built for the Gemini Live Agent Challenge**
+
+[![Hackathon](https://img.shields.io/badge/Hackathon-Gemini%20Live%20Agent-blueviolet)](#)
+[![Deployment](https://img.shields.io/badge/Deployed%20on-Google%20Cloud%20Run-blue)](https://cloud.google.com/run)
+
 </div>
 
-# Run and deploy your AI Studio app
+---
 
-This contains everything you need to run your app locally.
+# 🎬 Project Overview
 
-View your app in AI Studio: https://ai.studio/apps/3c1a3b83-c9a4-40a6-bbdf-a307f55c6cf6
+**Aura Genesis** is a high-fidelity cinematic character and concept generator.  
+It takes a single user prompt and orchestrates **five specialized Gemini models** to generate a complete media kit, including:
 
-## Run Locally
+- Backstories
+- High-resolution character portraits
+- Movie-style posters with consistent typography
+- AI-generated video clips
+- An immersive voiced **"Simulate"** experience
 
-**Prerequisites:**  Node.js
+---
 
+# 🧠 Multimodal Model Symphony
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+This project demonstrates advanced AI orchestration by chaining the following models:
+
+- **Gemini 3.0 Flash Preview**  
+  Acts as the **Creative Director**, generating the structured JSON brief.
+
+- **Imagen 3**  
+  Generates the initial **3:4 Hero Portrait**.
+
+- **Imagen 3 Pro**  
+  Uses the portrait as a reference to create **16:9 cinematic posters with embedded typography**.
+
+- **Veo 3.1 Fast**  
+  Animates the Hero Portrait into a **high-quality video clip**.
+
+- **Lyria 3 (TTS)**  
+  Narrates the story using the authoritative **"Fenrir" voice profile**.
+
+---
+
+# 🚀 Spin-Up Instructions (Reproducibility)
+
+To ensure this project is fully reproducible for the judges, follow these steps to run the application locally.
+
+---
+
+## 1️⃣ Prerequisites
+
+- **Node.js**  
+  Ensure you have Node.js **v18 or higher** installed.  
+  https://nodejs.org/
+
+- **Gemini API Key**  
+  Obtain an API key from **Google AI Studio**.  
+  https://aistudio.google.com/
+
+---
+
+## 2️⃣ Setup & Installation
+
+Clone the repository and install dependencies:
+
+```bash
+git clone <YOUR_PUBLIC_REPO_URL>
+cd aura-genesis
+npm install
+```
+
+---
+
+## 3️⃣ Environment Configuration
+
+Create a `.env.local` file in the root directory and add your API key:
+
+```env
+NEXT_PUBLIC_GEMINI_API_KEY=your_actual_api_key_here
+```
+
+---
+
+## 4️⃣ Run the Development Server
+
+Start the application locally:
+
+```bash
+npm run dev
+```
+
+Open the application in your browser:
+
+```
+http://localhost:3000
+```
+
+---
+
+# ☁️ Google Cloud Deployment
+
+This application is designed to deploy seamlessly to **Google Cloud Run** using a professional CI/CD pipeline.
+
+## Steps to Deploy
+
+### 1️⃣ Containerize
+
+The project includes:
+
+- `Dockerfile`
+- `cloudrun.yaml`
+
+---
+
+### 2️⃣ Secret Management
+
+Add your `GEMINI_API_KEY` to **Google Cloud Secret Manager**.
+
+---
+
+### 3️⃣ Deploy
+
+1. Push this repository to **GitHub**  
+2. Connect GitHub to **Cloud Run** in the Google Cloud Console  
+3. Ensure the `GEMINI_API_KEY` environment variable references the Secret Manager entry
+
+---
+
+# 📖 Content & Social Media
+
+**Medium Article**  
+Building Aura Genesis with One Click
+
+**Hashtag**
+
+```
+#GeminiLiveAgentChallenge
+```
+
+---
+
+# 🛠 Tech Stack
+
+**Frontend**
+
+- Next.js (App Router)
+- React
+
+**Styling**
+
+- Tailwind CSS
+
+**Animation**
+
+- motion/react (Framer Motion)
+
+**AI SDK**
+
+- @google/genai
+
+**Infrastructure**
+
+- Google Cloud Run
+- Cloud Build
+- Secret Manager
+
+---
+
+# ⚠️ Disclaimer
+
+I created this project and the associated content for the purposes of entering the **Gemini Live Agent Challenge hackathon**.
