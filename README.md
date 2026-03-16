@@ -1,6 +1,6 @@
 <div align="center">
 
-<img width="1200" height="475" alt="Aura Genesis Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+<img width="2752" height="1536" alt="logo" src="https://github.com/user-attachments/assets/3fbca4e7-6be8-47a3-b19c-ebdf721d95ae" />
 
 # Aura Genesis: Multimodal Cinematic Orchestrator
 **Built for the Gemini Live Agent Challenge**
@@ -43,6 +43,8 @@ This project demonstrates advanced AI orchestration by chaining the following mo
 
 - **Lyria 3 (TTS)**  
   Narrates the story using the authoritative **"Fenrir" voice profile**.
+
+![Uploading architectural_diagram.png…]()
 
 ---
 
@@ -134,7 +136,7 @@ Add your `GEMINI_API_KEY` to **Google Cloud Secret Manager**.
 # 📖 Content & Social Media
 
 **Medium Article**  
-Building Aura Genesis with One Click
+[Building Aura Genesis with One Click](https://zackmendel.medium.com/building-aura-genesis-with-one-click-orchestrating-5-gemini-models-on-google-cloud-f3f8f8153d73)
 
 **Hashtag**
 
@@ -174,5 +176,3 @@ Building Aura Genesis with One Click
 # ⚠️ Disclaimer
 
 I created this project and the associated content for the purposes of entering the **Gemini Live Agent Challenge hackathon**.
-
-Test
