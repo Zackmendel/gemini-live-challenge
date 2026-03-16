@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { GoogleGenAI } from '@google/genai';
-import { Loader2, Upload, PlayCircle, Copy, Check, X, Download } from 'lucide-react';
+import { Loader2, Upload, PlayCircle, Copy, Check, X, Download, Wand2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
@@ -50,6 +50,9 @@ function createWavUrl(base64Data: string, sampleRate = 24000): string {
 export default function FinalOutput({ text, isRevealed }: { text: string, isRevealed?: boolean }) {
   const [heroImage, setHeroImage] = useState<string | null>(null);
   const [isGeneratingHero, setIsGeneratingHero] = useState(false);
+  
+  const [hookImage, setHookImage] = useState<string | null>(null);
+  const [isGeneratingHook, setIsGeneratingHook] = useState(false);
   
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
@@ -145,62 +148,58 @@ export default function FinalOutput({ text, isRevealed }: { text: string, isReve
     }
   }, [isRevealed]);
 
-  useEffect(() => {
-    const generateVideo = async () => {
-      if (heroImage && motionPrompt && !generatedVideoUrl && !isGeneratingVideo) {
-        setIsGeneratingVideo(true);
-        try {
-          if (typeof window !== 'undefined' && (window as any).aistudio) {
-            const hasKey = await (window as any).aistudio.hasSelectedApiKey();
-            if (!hasKey) {
-              await (window as any).aistudio.openSelectKey();
-            }
+  const handleGenerateVideo = async () => {
+    if (heroImage && motionPrompt && !generatedVideoUrl && !isGeneratingVideo) {
+      setIsGeneratingVideo(true);
+      try {
+        if (typeof window !== 'undefined' && (window as any).aistudio) {
+          const hasKey = await (window as any).aistudio.hasSelectedApiKey();
+          if (!hasKey) {
+            await (window as any).aistudio.openSelectKey();
           }
-          
-          const currentAi = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
-          const base64Data = heroImage.split(',')[1];
-          const mimeType = heroImage.split(';')[0].split(':')[1];
-
-          let operation = await currentAi.models.generateVideos({
-            model: 'veo-3.1-fast-generate-preview',
-            prompt: motionPrompt,
-            image: {
-              imageBytes: base64Data,
-              mimeType: mimeType,
-            },
-            config: {
-              numberOfVideos: 1,
-              resolution: '720p',
-              aspectRatio: '16:9'
-            }
-          });
-
-          while (!operation.done) {
-            await new Promise(resolve => setTimeout(resolve, 10000));
-            operation = await currentAi.operations.getVideosOperation({operation: operation});
-          }
-
-          const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
-          if (downloadLink) {
-            const response = await fetch(downloadLink, {
-              method: 'GET',
-              headers: {
-                'x-goog-api-key': process.env.NEXT_PUBLIC_GEMINI_API_KEY || '',
-              },
-            });
-            const blob = await response.blob();
-            setGeneratedVideoUrl(URL.createObjectURL(blob));
-          }
-        } catch (error) {
-          console.error('Failed to generate video:', error);
-        } finally {
-          setIsGeneratingVideo(false);
         }
-      }
-    };
+        
+        const currentAi = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
+        const base64Data = heroImage.split(',')[1];
+        const mimeType = heroImage.split(';')[0].split(':')[1];
 
-    generateVideo();
-  }, [heroImage, motionPrompt, generatedVideoUrl, isGeneratingVideo]);
+        let operation = await currentAi.models.generateVideos({
+          model: 'veo-3.1-fast-generate-preview',
+          prompt: motionPrompt,
+          image: {
+            imageBytes: base64Data,
+            mimeType: mimeType,
+          },
+          config: {
+            numberOfVideos: 1,
+            resolution: '720p',
+            aspectRatio: '16:9'
+          }
+        });
+
+        while (!operation.done) {
+          await new Promise(resolve => setTimeout(resolve, 10000));
+          operation = await currentAi.operations.getVideosOperation({operation: operation});
+        }
+
+        const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+        if (downloadLink) {
+          const response = await fetch(downloadLink, {
+            method: 'GET',
+            headers: {
+              'x-goog-api-key': process.env.NEXT_PUBLIC_GEMINI_API_KEY || '',
+            },
+          });
+          const blob = await response.blob();
+          setGeneratedVideoUrl(URL.createObjectURL(blob));
+        }
+      } catch (error) {
+        console.error('Failed to generate video:', error);
+      } finally {
+        setIsGeneratingVideo(false);
+      }
+    }
+  };
 
   useEffect(() => {
     const generateHeroImage = async () => {
@@ -232,6 +231,54 @@ export default function FinalOutput({ text, isRevealed }: { text: string, isReve
     generateHeroImage();
   }, [heroPrompt, heroImage, isGeneratingHero]);
 
+  useEffect(() => {
+    const generateHookImage = async () => {
+      if (heroImage && compPrompt && !hookImage && !isGeneratingHook) {
+        setIsGeneratingHook(true);
+        try {
+          if (typeof window !== 'undefined' && (window as any).aistudio) {
+            const hasKey = await (window as any).aistudio.hasSelectedApiKey();
+            if (!hasKey) {
+              await (window as any).aistudio.openSelectKey();
+            }
+          }
+          const currentAi = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
+          
+          const base64Data = heroImage.split(',')[1];
+          const mimeType = heroImage.split(';')[0].split(':')[1];
+
+          const promptText = `${compPrompt}\n\nTypography requirement: The image MUST prominently feature the exact text: "${heroName}" boldly on top, and the text: "${hook}" on the bottom, styled like a cinematic movie poster. Maintain the character's appearance from the provided reference image.`;
+
+          const response = await currentAi.models.generateContent({
+            model: 'gemini-3.1-flash-image-preview',
+            contents: { 
+              parts: [
+                { inlineData: { data: base64Data, mimeType: mimeType } },
+                { text: promptText }
+              ] 
+            },
+            config: {
+              imageConfig: { aspectRatio: '16:9', imageSize: '1K' }
+            }
+          });
+          
+          for (const part of response.candidates?.[0]?.content?.parts || []) {
+            if (part.inlineData) {
+              setHookImage(`data:image/png;base64,${part.inlineData.data}`);
+              break;
+            }
+          }
+        } catch (error) {
+          console.error('Failed to generate hook image:', error);
+        } finally {
+          setIsGeneratingHook(false);
+        }
+      }
+    };
+
+    generateHookImage();
+  }, [heroImage, compPrompt, hookImage, isGeneratingHook, heroName, hook]);
+
   const copyToClipboard = (textToCopy: string, id: string) => {
     navigator.clipboard.writeText(textToCopy);
     setCopiedId(id);
@@ -252,13 +299,13 @@ export default function FinalOutput({ text, isRevealed }: { text: string, isReve
       setIsPreparingSimulation(true);
       try {
         const response = await ai.models.generateContent({
-          model: 'gemini-3.1-flash-image-preview',
+          model: 'gemini-2.5-flash-preview-tts',
           contents: [{ parts: [{ text: `${heroName}. ${story}` }] }],
           config: {
             responseModalities: ['AUDIO' as any],
             speechConfig: {
               voiceConfig: {
-                prebuiltVoiceConfig: { voiceName: 'Charon' } // Deep, cinematic voice
+                prebuiltVoiceConfig: { voiceName: 'Fenrir' } // Deep, authoritative, Optimus Prime-like voice
               }
             }
           }
@@ -380,14 +427,14 @@ export default function FinalOutput({ text, isRevealed }: { text: string, isReve
               <img src={heroImage} alt={heroName} className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105" />
               <button
                 onClick={(e) => { e.stopPropagation(); handleDownload(heroImage, `${heroName.replace(/\s+/g, '_')}_Portrait.png`); }}
-                className="absolute top-4 right-4 z-20 p-3 bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/20 rounded-xl text-white/70 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-xl"
+                className="absolute top-4 right-4 z-20 p-3 bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/20 rounded-xl text-white transition-all shadow-xl"
                 title="Download Image"
               >
                 <Download className="w-5 h-5" />
               </button>
             </>
           ) : (
-            <span className="text-zinc-600 font-mono text-sm uppercase tracking-widest">Image generation failed</span>
+            <span className="text-zinc-600 font-mono text-sm uppercase tracking-widest">Awaiting Generation...</span>
           )}
         </div>
         <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-3xl p-8 flex flex-col shadow-xl">
@@ -421,23 +468,19 @@ export default function FinalOutput({ text, isRevealed }: { text: string, isReve
 
       {/* 4. Hook Image (Composition) & Prompt */}
       <div className="flex flex-col gap-10 relative z-10">
-        <div className="w-full aspect-video rounded-3xl overflow-hidden bg-white/5 border border-white/10 relative shadow-2xl group">
-          {heroImage ? (
+        <div className="w-full aspect-video rounded-3xl overflow-hidden bg-white/5 border border-white/10 relative shadow-2xl flex items-center justify-center group">
+          {isGeneratingHook ? (
+            <div className="flex flex-col items-center gap-4 text-zinc-500">
+              <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+              <span className="text-xs font-mono uppercase tracking-[0.2em]">Forging Hook Image...</span>
+            </div>
+          ) : hookImage ? (
             <>
-              <img src={heroImage} alt="Background" className="absolute inset-0 w-full h-full object-cover opacity-30 blur-xl scale-110 transition-transform duration-1000 group-hover:scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent" />
-              <div className="absolute inset-0 flex flex-col justify-end p-10 md:p-20 text-center z-10">
-                <h2 className="text-5xl md:text-7xl font-display font-black text-white uppercase tracking-[0.2em] drop-shadow-2xl mb-6">
-                  {heroName}
-                </h2>
-                <p className="text-xl md:text-3xl font-display italic text-zinc-300 drop-shadow-xl font-light max-w-4xl mx-auto">
-                  &quot;{hook}&quot;
-                </p>
-              </div>
+              <img src={hookImage} alt="Hook Background" className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
               <button
-                onClick={(e) => { e.stopPropagation(); handleDownload(heroImage, `${heroName.replace(/\s+/g, '_')}_Background.png`); }}
-                className="absolute top-6 right-6 z-20 p-3 bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/20 rounded-xl text-white/70 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-xl"
-                title="Download Background Image"
+                onClick={(e) => { e.stopPropagation(); handleDownload(hookImage, `${heroName.replace(/\s+/g, '_')}_Hook.png`); }}
+                className="absolute top-6 right-6 z-20 p-3 bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/20 rounded-xl text-white transition-all shadow-xl"
+                title="Download Hook Image"
               >
                 <Download className="w-5 h-5" />
               </button>
@@ -497,14 +540,24 @@ export default function FinalOutput({ text, isRevealed }: { text: string, isReve
                 <video src={generatedVideoUrl} autoPlay loop muted playsInline className="object-cover w-full h-full" />
                 <button
                   onClick={(e) => { e.stopPropagation(); handleDownload(generatedVideoUrl, `${heroName.replace(/\s+/g, '_')}_Motion.mp4`); }}
-                  className="absolute top-4 right-4 z-20 p-3 bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/20 rounded-xl text-white/70 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-xl"
+                  className="absolute top-4 right-4 z-20 p-3 bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/20 rounded-xl text-white transition-all shadow-xl"
                   title="Download Video"
                 >
                   <Download className="w-5 h-5" />
                 </button>
               </>
             ) : (
-              <span className="text-zinc-600 font-mono text-sm uppercase tracking-widest">Awaiting Hero Image...</span>
+              <div className="flex flex-col items-center gap-4 z-10">
+                <button
+                  onClick={handleGenerateVideo}
+                  disabled={!heroImage}
+                  className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-mono font-bold text-xs tracking-[0.2em] uppercase transition-all shadow-lg hover:shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Wand2 className="w-4 h-4" />
+                  Generate Video
+                </button>
+                {!heroImage && <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Requires Hero Image</span>}
+              </div>
             )}
           </div>
 
